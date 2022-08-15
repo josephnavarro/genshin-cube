@@ -38,7 +38,8 @@ class ImageEditor:
         "font",
         "cut_buffer",
         "pixel_grid",
-        "multi_preview"
+        "multi_preview",
+        "load_file"
     ]
 
     def __init__(
@@ -81,6 +82,8 @@ class ImageEditor:
                                 multi_preview[1] = int(b)
             except FileNotFoundError:
                 pass
+
+        self.load_file = load_file
 
         # Main variables
         assert bool(num_canvases)
@@ -340,7 +343,8 @@ class ImageEditor:
     def quit(self):
         """ Safely quits pygame.
         """
-        with open("persist.txt", "w") as f:
+        save_file = self.load_file or "persist-temp.txt"
+        with open(save_file, "w") as f:
             f.write("canvas_w>>{}\n".format(self.working_image_w))
             f.write("canvas_h>>{}\n".format(self.working_image_h))
             f.write("num_canvases>>{}\n".format(self.num_canvases))
@@ -781,7 +785,7 @@ class ImageEditor:
 
 def main():
     #ie = ImageEditor(16, 16, 16, multi_preview=[4, 4])
-    ie = ImageEditor(8, 8, 64, multi_preview=[8, 8])
+    ie = ImageEditor(8, 8, 144, multi_preview=[12, 12], load_file="persist1.txt")
     #ie = ImageEditor(0, 0, 0)
     while True:
         ie.update()
