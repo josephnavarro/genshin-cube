@@ -416,7 +416,7 @@ class ImageEditor:
     def draw_canvas(self, dest: pygame.Surface, x: int, y: int, do_scale: bool = True):
         """ Renders canvas of the current working image to screen.
         """
-        self.draw_nth_canvas(self.canvas_index, dest, x, y, do_scale)
+        return self.draw_nth_canvas(self.canvas_index, dest, x, y, do_scale)
 
     def draw_nth_canvas(self, index: int, dest: pygame.Surface, x: int, y: int, do_scale: bool = True):
         """ Renders an arbitrary canvas to screen.
@@ -429,6 +429,7 @@ class ImageEditor:
                 palette_enum = self.get_pixel(working_image, m, n)
                 color = self.palette[palette_enum]
                 pygame.draw.rect(dest, color, (x + m * scale_x, y + n * scale_y, scale_x, scale_y))
+        return scale_x * working_image.shape[1], scale_y * working_image.shape[0]
 
     def draw_palette(self, dest: pygame.Surface) -> Tuple[int, int]:
         """ Renders the palette bar.
@@ -451,7 +452,7 @@ class ImageEditor:
                 pygame.draw.rect(dest, (0, 0, 0), rect, 5)
                 pygame.draw.rect(dest, (255, 255, 255), rect, 3)
 
-        return dx + spacing_x, ImageEditor.WIDGET_BUFFER
+        return dx + spacing_x, dy + spacing_y
 
     def draw_cursor(self, dest: pygame.Surface, x: int, y: int):
         """ Renders the brush cursor.
@@ -475,21 +476,28 @@ class ImageEditor:
               ), 1
         )
 
-    def draw_text(self, dest: pygame.Surface, string: str, x: int, y: int):
+    def draw_text(self, dest: pygame.Surface, string: str, x: int, y: int) -> tuple[int, int]:
         """ Renders some text.
         """
         dx: int = 0
         dy: int = 0
+        w: int = 0
+        h: int = 0
         for ch in string:
-            glyph = self.font.get(ch)
-            if glyph:
-                w = glyph.get_width()
-                h = glyph.get_height()
-                if (x + dx + w) > ImageEditor.SCREEN_WIDTH:
-                    dx = 0
-                    dy += h
-                dest.blit(glyph, (x + dx, y + dy))
-                dx += w
+            if ch == "\n":
+                dx = 0
+                dy += h
+            else:
+                glyph = self.font.get(ch)
+                if glyph:
+                    w = glyph.get_width()
+                    h = glyph.get_height()
+                    if (x + dx + w) > ImageEditor.SCREEN_WIDTH:
+                        dx = 0
+                        dy += h
+                    dest.blit(glyph, (x + dx, y + dy))
+                    dx += w
+        return x + dx + w, y + dy + h
 
     def draw_pixel_grid(self, start_x: int, start_y: int):
         """ Draws pixel grid guidelines.
@@ -512,24 +520,10 @@ class ImageEditor:
 
         # Editing canvas
         dx, dy = self.canvas_offset
-        self.draw_canvas(self.display, dx, dy)
+        dxc, dyc = self.draw_canvas(self.display, dx, dy)
         self.draw_cursor(self.display, dx, dy)
         if self.pixel_grid:
             self.draw_pixel_grid(dx, dy)
-
-        # 1:1 scale preview
-        dx, dy = self.preview_offset
-        for n in range(self.num_canvases):
-            canvas = self.working_images[n]
-            tx = dx + (canvas.shape[1] + ImageEditor.WIDGET_BUFFER) * n
-            self.draw_nth_canvas(n, self.display, tx, dy, False)
-            if n != self.canvas_index:
-                # Dim the ones that aren't in focus
-                self.display.fill(
-                      (100, 100, 100),
-                      (tx, dy, canvas.shape[1], canvas.shape[0]),
-                      special_flags=pygame.BLEND_MULT
-                      )
 
         # Multi-composite preview
         dx, dy = self.multi_preview_offset
@@ -545,22 +539,50 @@ class ImageEditor:
                     except IndexError as e:
                         pass
 
-        # String preview
-        dx, dy = self.clipboard_offset
-        self.draw_text(self.display, self.clipboard, dx, dy)
-
         # Palette bar
         dx, dy = self.draw_palette(self.display)
 
+        # 1:1 scale preview
+        dx2, dy2 = self.preview_offset
+        tx2 = dx2
+        ty2 = max(dyc, dy) + ImageEditor.WIDGET_BUFFER
+        tw2 = 0
+        th2 = 0
+        for n in range(self.num_canvases):
+            canvas = self.working_images[n]
+            th2 = canvas.shape[0]
+            tw2 = canvas.shape[1]
+            if tx2 >= ImageEditor.SCREEN_WIDTH:
+                tx2 = dx2
+                ty2 += ImageEditor.WIDGET_BUFFER + th2
+            self.draw_nth_canvas(n, self.display, tx2, ty2, False)
+            if n != self.canvas_index:
+                # Dim the ones that aren't in focus
+                self.display.fill(
+                    (100, 100, 100),
+                    (tx2, ty2, tw2, th2),
+                    special_flags=pygame.BLEND_MULT
+                )
+            tx2 += tw2 + ImageEditor.WIDGET_BUFFER
+
         # Selection size
-        self.draw_text(self.display, "x {}".format(self.cursor[1]), dx, dy + ImageEditor.FONT_SIZE[0] * 0)
-        self.draw_text(self.display, "y {}".format(self.cursor[0]), dx, dy + ImageEditor.FONT_SIZE[0] * 2)
-        self.draw_text(self.display, "w {}".format(self.cursor[3]), dx, dy + ImageEditor.FONT_SIZE[0] * 4)
-        self.draw_text(self.display, "h {}".format(self.cursor[2]), dx, dy + ImageEditor.FONT_SIZE[0] * 6)
+        self.draw_text(self.display, "x {}".format(self.cursor[1]), dx, ImageEditor.WIDGET_BUFFER + ImageEditor.FONT_SIZE[0] * 0)
+        self.draw_text(self.display, "y {}".format(self.cursor[0]), dx, ImageEditor.WIDGET_BUFFER + ImageEditor.FONT_SIZE[0] * 2)
+        self.draw_text(self.display, "w {}".format(self.cursor[3]), dx, ImageEditor.WIDGET_BUFFER + ImageEditor.FONT_SIZE[0] * 4)
+        self.draw_text(self.display, "h {}".format(self.cursor[2]), dx, ImageEditor.WIDGET_BUFFER + ImageEditor.FONT_SIZE[0] * 6)
         self.draw_text(
               self.display,
               "{},{}".format(self.working_image_w, self.working_image_h),
-              dx, dy + ImageEditor.FONT_SIZE[0] * 8
+              dx, ImageEditor.WIDGET_BUFFER + ImageEditor.FONT_SIZE[0] * 8
+        )
+
+        # String preview
+        dx0, dy0 = self.clipboard_offset
+        dx1, dy1 = self.draw_text(self.display, self.clipboard, dx0, ty2 + th2 + ImageEditor.WIDGET_BUFFER)
+        self.draw_text(
+            self.display,
+            "SPACE: Next canvas\nSHIFT + -SPACE: Previous canvas\nBAZ",
+            dx0, dy1 + ImageEditor.WIDGET_BUFFER
         )
 
         pygame.display.flip()
@@ -638,8 +660,7 @@ class ImageEditor:
             elif e.type == pygame.KEYDOWN:
                 if e.key == pygame.K_ESCAPE:
                     # Quit pygame
-                    # self.quit()
-                    pass
+                    self.quit()
                 elif e.key == pygame.K_SPACE:
                     # Swap canvas
                     if e.mod & pygame.KMOD_LSHIFT:
@@ -766,8 +787,9 @@ class ImageEditor:
 
 
 def main():
-    ie = ImageEditor(16, 16, 16, multi_preview=[4, 4], load_file="persist.txt")
-    #ie = ImageEditor(0, 0, 0, load_file="persist.txt")
+    #ie = ImageEditor(16, 16, 16, multi_preview=[4, 4])
+    ie = ImageEditor(8, 8, 128)
+    # ie = ImageEditor(0, 0, 0, load_file="persist.txt")
     while True:
         ie.update()
         ie.render()
