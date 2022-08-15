@@ -1,7 +1,10 @@
 #! usr/bin/env python3
+import os
+import shutil
 import pygame
 import pyperclip as pc
 import numpy as np
+from PIL import Image
 from typing import List, Tuple, Dict
 from src.utility_image import ImageUtil
 
@@ -701,6 +704,31 @@ class ImageEditor:
         self.history.append(im)
         self.redo = []
 
+    def export_all(self):
+        savname: str = os.path.splitext(self.load_file)[0] or "persist"
+        dirname: str = "{}_export".format(savname)
+        try:
+            os.makedirs(dirname)
+        except FileExistsError:
+            shutil.rmtree(dirname)
+            os.makedirs(dirname)
+
+        padding = len(str(len(self.working_images)))
+        namefmt = "{{0:s}}_{{1:0{}}}.png".format(padding)
+
+        for nn, numpy_image in enumerate(self.working_images):
+            w = numpy_image.shape[1]
+            h = numpy_image.shape[0]
+            outs = pygame.Surface((w, h))
+            for m in range(h):
+                for n in range(w):
+                    palette_enum = self.get_pixel(numpy_image, m, n)
+                    color = self.palette[palette_enum]
+                    pygame.draw.rect(outs, color, (n, m, 1, 1))
+            output = pygame.surfarray.array2d(outs)
+            im = Image.fromarray(np.uint8(output)).convert('RGB')
+            im.save(os.path.join(dirname, namefmt.format(savname, nn)))
+
     def update(self):
         """ Accept user input.
         """
@@ -811,6 +839,9 @@ class ImageEditor:
                     if e.mod & pygame.KMOD_LSHIFT:
                         # Undo
                         self.swap(self.history, self.redo)
+                elif e.key == pygame.K_e:
+                    if e.mod & pygame.KMOD_LSHIFT:
+                        self.export_all()
                 elif e.key == pygame.K_r:
                     if e.mod & pygame.KMOD_LSHIFT:
                         # Redo
@@ -841,7 +872,7 @@ class ImageEditor:
 
 def main():
     #ie = ImageEditor(16, 16, 16, multi_preview=[4, 4])
-    ie = ImageEditor(8, 8, 144, multi_preview=[12, 12], load_file="persist1.txt")
+    ie = ImageEditor(16, 16, 16, multi_preview=[4, 4], load_file="persist2.txt")
     #ie = ImageEditor(0, 0, 0)
     while True:
         ie.update()
