@@ -365,9 +365,7 @@ class ImageEditor:
 
         }
 
-    def quit(self):
-        """ Safely quits pygame.
-        """
+    def save(self):
         save_file = self.load_file or "persist-temp.txt"
         with open(save_file, "w") as f:
             f.write("canvas_w>>{}\n".format(self.working_image_w))
@@ -378,6 +376,10 @@ class ImageEditor:
             f.write("multipreview_x>>{}\n".format(self.multi_preview[0]))
             f.write("multipreview_y>>{}\n".format(self.multi_preview[1]))
 
+    def quit(self):
+        """ Safely quits pygame.
+        """
+        self.save()
         pygame.quit()
         raise SystemExit
 
@@ -862,9 +864,13 @@ class ImageEditor:
                     self.cursor[2] = self.working_image_h
                     self.cursor[3] = self.working_image_w
                 elif e.key == pygame.K_s:
-                    # Minimize brush
-                    self.cursor[2] = 1
-                    self.cursor[3] = 1
+                    if e.mod & pygame.KMOD_LSHIFT:
+                        # Save
+                        self.save()
+                    else:
+                        # Minimize brush
+                        self.cursor[2] = 1
+                        self.cursor[3] = 1
                 elif e.key == pygame.K_g:
                     if e.mod & pygame.KMOD_LSHIFT:
                         # Toggle pixel grid display
@@ -873,7 +879,7 @@ class ImageEditor:
 
 def main():
     #ie = ImageEditor(16, 16, 16, multi_preview=[4, 4])
-    ie = ImageEditor(16, 16, 16, multi_preview=[4, 4], load_file="persist1.txt")
+    ie = ImageEditor(16, 16, 49, multi_preview=[7, 7], load_file="persist2.txt")
     #ie = ImageEditor(0, 0, 0)
     while True:
         ie.update()
