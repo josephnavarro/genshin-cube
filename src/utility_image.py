@@ -46,13 +46,13 @@ class ImageUtil:
         return image
 
     @staticmethod
-    def hex_to_rgb(hex: str) -> List[int]:
+    def hex_to_rgb(hexstr: str) -> List[int]:
         """ Converts a hexadecimal string to an [R,G,B] color list.
         """
-        hex = hex.lstrip("#")
-        if len(hex) == 3:
-            hex = hex[0] * 2 + hex[1] * 2 + hex[2] * 2
-        return [int(hex[i:i + 2], 16) for i in (0, 2, 4)]
+        hexstr = hexstr.lstrip("#")
+        if len(hexstr) == 3:
+            hexstr = hexstr[0] * 2 + hexstr[1] * 2 + hexstr[2] * 2
+        return [int(hexstr[i:i + 2], 16) for i in (0, 2, 4)]
 
     @staticmethod
     def dessicate(image: str) -> str:
@@ -156,3 +156,21 @@ class ImageUtil:
         """ Creates a new palette from four colors (ordered).
         """
         return {0: a, 1: b, 2: c, 3: d}
+
+    @staticmethod
+    def numpy_image_to_string(working_image: np.ndarray) -> str:
+        output = str()
+        for y in range(0, working_image.shape[0], 2):
+            for x in range(0, working_image.shape[1], 2):
+                slice2d = working_image[y:y + 2, x:x + 2]
+                slice1d = slice2d.ravel(order='C')
+                a = int(slice1d[0])
+                b = int(slice1d[1])
+                c = int(slice1d[2])
+                d = int(slice1d[3])
+                e = (a << 6) | (b << 4) | (c << 2) | d
+                f = e.to_bytes(1, 'big')
+                g = f.hex()
+                output += g
+        output = ImageUtil.dessicate(output)
+        return output

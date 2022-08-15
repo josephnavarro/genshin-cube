@@ -377,21 +377,7 @@ class ImageEditor:
         """ Converts an arbitrary canvas to an image string.
         """
         working_image = self.working_images[n]
-        output = ""
-        for y in range(0, working_image.shape[0], 2):
-            for x in range(0, working_image.shape[1], 2):
-                slice2d = working_image[y:y + 2, x:x + 2]
-                slice1d = slice2d.ravel(order='C')
-                a = int(slice1d[0])
-                b = int(slice1d[1])
-                c = int(slice1d[2])
-                d = int(slice1d[3])
-                e = (a << 6) | (b << 4) | (c << 2) | d
-                f = e.to_bytes(1, 'big')
-                g = f.hex()
-                output += g
-        output = ImageUtil.dessicate(output)
-        return output
+        return ImageUtil.numpy_image_to_string(working_image)
 
     def export_image(self) -> str:
         """ Converts the current working image to an image string.
@@ -788,8 +774,8 @@ class ImageEditor:
 
 def main():
     #ie = ImageEditor(16, 16, 16, multi_preview=[4, 4])
-    ie = ImageEditor(8, 8, 128)
-    # ie = ImageEditor(0, 0, 0, load_file="persist.txt")
+    #ie = ImageEditor(8, 8, 128)
+    ie = ImageEditor(0, 0, 0, load_file="persist.txt")
     while True:
         ie.update()
         ie.render()
