@@ -358,6 +358,7 @@ class ImageEditor:
             "^": iuci("xf3Xc3Xxcx3XXX"),
             "_": iuci("(Xxj,3)Xx3f"),
             "`": iuci("XX3c(XX,2)Xx"),
+            "/": iuci("Xxf(3Xc,3)Xxf")
 
         }
 
@@ -616,9 +617,26 @@ class ImageEditor:
         dx1, dy1 = self.draw_text(self.display, self.clipboard, dx0, ty2 + th2 + ImageEditor.WIDGET_BUFFER)
         self.draw_text(
             self.display,
+            "UP/DOWN/LEFT/RIGHT: Move cursor\n"
+            "X: Paint\n"
+            "N: Copy (string) to clipboard\n"
+            "M: Paste (string) from clipboard\n"
+            "A: Maximize\n"
+            "S: Minimize\n"
             "SPACE: Next canvas\n"
             "SHIFT+SPACE: Previous canvas\n"
-            "BAZ",
+            "SHIFT+UP: Cursor height -\n"
+            "SHIFT+DOWN: Cursor height +\n"
+            "SHIFT+LEFT: Cursor width -\n"
+            "SHIFT+RIGHT: Cursor width +\n"
+            "ALT+UP/DOWN: Cycle palette\n"
+            "SHIFT+X: Cut\n"
+            "SHIFT+C: Copy\n"
+            "SHIFT+V: Paste\n"
+            "SHIFT+Z: Undo\n"
+            "SHIFT+R: Redo\n"
+            "SHIFT+G: Toggle grid"
+            ,
             dx0, dy1 + ImageEditor.WIDGET_BUFFER
         )
 
