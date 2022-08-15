@@ -611,11 +611,11 @@ class ImageEditor:
         )
 
         # String preview
-        self.strings_nelow(ty2, th2)
+        self.strings_below(ty2, th2)
 
         pygame.display.flip()
 
-    def strings_nelow(self, ty2, th2):
+    def strings_below(self, ty2, th2):
         dx0, dy0 = self.clipboard_offset
         dx1, dy1 = self.draw_text(self.display, self.clipboard, dx0, ty2 + th2 + ImageEditor.WIDGET_BUFFER)
         self.draw_text(
@@ -638,7 +638,8 @@ class ImageEditor:
             "SHIFT+V: Paste\n"
             "SHIFT+Z: Undo\n"
             "SHIFT+R: Redo\n"
-            "SHIFT+G: Toggle grid"
+            "SHIFT+G: Toggle grid\n"
+            "SHIFT+E: Export all to PNG"
             ,
             dx0, dy1 + ImageEditor.WIDGET_BUFFER
         )
@@ -872,7 +873,7 @@ class ImageEditor:
 
 def main():
     #ie = ImageEditor(16, 16, 16, multi_preview=[4, 4])
-    ie = ImageEditor(16, 16, 16, multi_preview=[4, 4], load_file="persist2.txt")
+    ie = ImageEditor(16, 16, 16, multi_preview=[4, 4], load_file="persist1.txt")
     #ie = ImageEditor(0, 0, 0)
     while True:
         ie.update()
