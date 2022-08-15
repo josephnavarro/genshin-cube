@@ -9,8 +9,8 @@ from src.utility_image import ImageUtil
 class ImageEditor:
     CAPTION: str = "Image Editor"
     FLAGS: int = pygame.DOUBLEBUF | pygame.HWSURFACE
-    SCREEN_WIDTH: int = 640
-    SCREEN_HEIGHT: int = 400
+    SCREEN_WIDTH: int = 720
+    SCREEN_HEIGHT: int = 720
     DEFAULT_WIDTH: int = 32
     DEFAULT_HEIGHT: int = 32
     PIXEL_WIDTH: int = 9
@@ -83,6 +83,8 @@ class ImageEditor:
                 pass
 
         # Main variables
+        assert bool(num_canvases)
+
         self.pixel_grid: bool = False
         self.num_canvases: int = num_canvases
         self.canvas_index: int = 0
@@ -528,7 +530,7 @@ class ImageEditor:
         # Palette bar
         dx, dy = self.draw_palette(self.display)
 
-        # 1:1 scale preview
+        # Multiple 1:1 scale previews
         dx2, dy2 = self.preview_offset
         tx2 = dx2
         ty2 = max(dyc, dy) + ImageEditor.WIDGET_BUFFER
@@ -538,7 +540,7 @@ class ImageEditor:
             canvas = self.working_images[n]
             th2 = canvas.shape[0]
             tw2 = canvas.shape[1]
-            if tx2 >= ImageEditor.SCREEN_WIDTH:
+            if tx2 >= ImageEditor.SCREEN_WIDTH - ImageEditor.WIDGET_BUFFER:
                 tx2 = dx2
                 ty2 += ImageEditor.WIDGET_BUFFER + th2
             self.draw_nth_canvas(n, self.display, tx2, ty2, False)
@@ -563,15 +565,20 @@ class ImageEditor:
         )
 
         # String preview
+        self.strings_nelow(ty2, th2)
+
+        pygame.display.flip()
+
+    def strings_nelow(self, ty2, th2):
         dx0, dy0 = self.clipboard_offset
         dx1, dy1 = self.draw_text(self.display, self.clipboard, dx0, ty2 + th2 + ImageEditor.WIDGET_BUFFER)
         self.draw_text(
             self.display,
-            "SPACE: Next canvas\nSHIFT + -SPACE: Previous canvas\nBAZ",
+            "SPACE: Next canvas\n"
+            "SHIFT + -SPACE: Previous canvas\n"
+            "BAZ",
             dx0, dy1 + ImageEditor.WIDGET_BUFFER
         )
-
-        pygame.display.flip()
 
     def snapshot(self) -> str:
         """ Returns a string representation of the current image.
@@ -774,8 +781,8 @@ class ImageEditor:
 
 def main():
     #ie = ImageEditor(16, 16, 16, multi_preview=[4, 4])
-    #ie = ImageEditor(8, 8, 128)
-    ie = ImageEditor(0, 0, 0, load_file="persist.txt")
+    ie = ImageEditor(8, 8, 64, multi_preview=[8, 8])
+    #ie = ImageEditor(0, 0, 0)
     while True:
         ie.update()
         ie.render()
