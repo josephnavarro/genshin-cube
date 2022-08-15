@@ -449,20 +449,37 @@ class ImageEditor:
     def draw_cursor(self, dest: pygame.Surface, x: int, y: int):
         """ Renders the brush cursor.
         """
+
+        cx = self.cursor[1]
+        cy = self.cursor[0]
+        cw = self.cursor[3]
+        ch = self.cursor[2]
+
+        edge1 = cx == self.working_image_w - 1 or cx == 0
+        edge2 = cy == self.working_image_h - 1 or cy == 0
+        edge3 = cx + cw == self.working_image_w
+        edge4 = cy + ch == self.working_image_h
+
+        color1 = (255, 255, 255)
+        color2 = (0, 0, 0)
+        if edge1 or edge2 or edge3 or edge4:
+            color1 = (255, 255, 0)
+            color2 = (255, 0, 0)
+
         pygame.draw.rect(
               dest,
-              (255, 255, 255), (
-                  self.cursor[1] * ImageEditor.PIXEL_WIDTH + x - 1,
-                  self.cursor[0] * ImageEditor.PIXEL_HEIGHT + y - 1,
+              color1, (
+                  cx * ImageEditor.PIXEL_WIDTH + x - 1,
+                  cy * ImageEditor.PIXEL_HEIGHT + y - 1,
                   self.cursor[3] * ImageEditor.PIXEL_WIDTH + 2,
                   self.cursor[2] * ImageEditor.PIXEL_HEIGHT + 2
               ), 3
         )
         pygame.draw.rect(
               dest,
-              (0, 0, 0), (
-                  self.cursor[1] * ImageEditor.PIXEL_WIDTH + x,
-                  self.cursor[0] * ImageEditor.PIXEL_HEIGHT + y,
+              color2, (
+                  cx * ImageEditor.PIXEL_WIDTH + x,
+                  cy * ImageEditor.PIXEL_HEIGHT + y,
                   self.cursor[3] * ImageEditor.PIXEL_WIDTH,
                   self.cursor[2] * ImageEditor.PIXEL_HEIGHT
               ), 1
