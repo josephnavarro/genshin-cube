@@ -335,10 +335,13 @@ class ImageEditor:
             "X": iuci("f0xfcf3x3c3X03f3cf3XX"),
             "Y": iuci("f0XX3cf0f3f03XXXf"),
             "Z": iuci("f3xfcfj3fc3fj303xfjXX"),
-            "(": iuci("XXfcGf303X0cXX"),
-            ")": iuci("XX30Xc0cfG3XXf"),
+            "(": iuci("XXfc0f3cx3Xf3XXf"),
+            ")": iuci("XX3cxfc3xf0f3XXxf"),
             ",": iuci("XXXxfcXu03XX"),
+            ".": iuci("XXXuj(XX,2)"),
             " ": iuci("(XX,4)"),
+            "+": iuci("xfcXfu0f0XuXXX"),
+            "-": iuci("xfc(Xxu,2)XXX"),
             "!": iuci("XX(f0,2)(f3,2)(XX,2)"),
             "\"": iuci("f0f3Xf0f3(XX,2)X"),
             "#": iuci("x(f3,2)x0f030j(f0,2)30jXXf"),
@@ -614,7 +617,7 @@ class ImageEditor:
         self.draw_text(
             self.display,
             "SPACE: Next canvas\n"
-            "SHIFT + -SPACE: Previous canvas\n"
+            "SHIFT+SPACE: Previous canvas\n"
             "BAZ",
             dx0, dy1 + ImageEditor.WIDGET_BUFFER
         )
