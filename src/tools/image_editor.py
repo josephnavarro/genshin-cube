@@ -880,6 +880,7 @@ class ImageEditor:
 def main():
     #ie = ImageEditor(16, 16, 16, multi_preview=[4, 4])
     ie = ImageEditor(16, 16, 49, multi_preview=[7, 7], load_file="persist2.txt")
+    #ie = ImageEditor(8, 8, 49, multi_preview=[7, 7], load_file="persist8x8.txt")
     #ie = ImageEditor(0, 0, 0)
     while True:
         ie.update()
