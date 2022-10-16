@@ -169,6 +169,10 @@ class ImageEditor:
 
     @working_palette.setter
     def working_palette(self, value):
+        if value < 0:
+            value = len(self.palettes) - 1
+        if value >= len(self.palettes):
+            value = 0
         self.working_palettes[self.canvas_index] = value
 
     @property
@@ -820,6 +824,8 @@ class ImageEditor:
                             self.cursor[1] -= 1
                             if self.cursor[1] <= 0:
                                 self.cursor[1] = 0
+                    elif e.mod & pygame.KMOD_ALT:
+                        self.working_palette -= 1
                     else:
                         # Move brush
                         self.cursor[1] -= 1
@@ -831,6 +837,8 @@ class ImageEditor:
                         self.cursor[3] += 1
                         if self.cursor[1] + self.cursor[3] > self.working_image_w:
                             self.cursor[3] = self.working_image_w - self.cursor[1]
+                    elif e.mod & pygame.KMOD_ALT:
+                        self.working_palette += 1
                     else:
                         # Move brush
                         self.cursor[1] += 1
