@@ -95,7 +95,7 @@ class ImageEditor:
         # Main variables
         assert bool(num_canvases)
 
-        self.pixel_grid: bool = False
+        self.pixel_grid: bool = True
         self.num_canvases: int = num_canvases
         self.canvas_index: int = int()
         self.palette_indices: List[int] = [int() for _ in range(num_canvases)]
@@ -273,6 +273,9 @@ class ImageEditor:
         z = gray(z)
         s = pygame.surfarray.make_surface(z)
         s = pygame.transform.smoothscale(s, (ImageEditor.SCREEN_WIDTH, ImageEditor.SCREEN_HEIGHT))
+
+        s = pygame.Surface((ImageEditor.SCREEN_WIDTH, ImageEditor.SCREEN_HEIGHT))
+        s.fill((0, 0, 0))
 
         return display, s
 
@@ -507,7 +510,6 @@ class ImageEditor:
     def draw_cursor(self, dest: pygame.Surface, x: int, y: int):
         """ Renders the brush cursor.
         """
-
         cx = self.cursor[1]
         cy = self.cursor[0]
         cw = self.cursor[3]
