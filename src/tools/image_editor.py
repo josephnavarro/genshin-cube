@@ -31,11 +31,12 @@ class ImageEditor:
         "clock",
         "num_canvases",
         "working_images",
+        "working_palettes",
         "canvas_index",
         "cursor",
-        "palette",
+        "palettes",
         "clipboards",
-        "palette_index",
+        "palette_indices",
         "histories",
         "redos",
         "font",
@@ -52,14 +53,14 @@ class ImageEditor:
           num_canvases: int = NUM_CANVASES,
           *,
           multi_preview: List[int] = [0, 0],
-          load_file: str = ""
+          load_file: str = str()
     ):
         # Pygame stuff
         self.display, self.background = self.init_pygame()
         self.clock = pygame.time.Clock()
 
         # Load persistent data (if any)
-        buffer = {}
+        buffer = dict()
         if load_file:
             try:
                 with open(load_file, "r") as f:
@@ -93,18 +94,19 @@ class ImageEditor:
 
         self.pixel_grid: bool = False
         self.num_canvases: int = num_canvases
-        self.canvas_index: int = 0
-        self.palette_index: int = 0
+        self.canvas_index: int = int()
+        self.palette_indices: List[int] = [int() for _ in range(num_canvases)]
         self.cursor: List[int] = [0, 0, 1, 1]
         self.multi_preview: List[int] = multi_preview
         self.histories: List[List[str]] = [list() for _ in range(num_canvases)]
         self.redos: List[List[str]] = [list() for _ in range(num_canvases)]
         self.cut_buffer: Tuple[np.ndarray, int, int] = tuple()
-        self.palette: Dict[int, List[int]] = {}
-        self.font: Dict[str, pygame.Surface] = {}
-        self.clipboards: List[str] = []
+        self.palettes: Dict[int, Dict[int, List[int]]] = dict()
+        self.font: Dict[str, pygame.Surface] = dict()
+        self.clipboards: List[str] = list()
 
         # Create canvases
+        self.working_palettes: List[int] = [int() for _ in range(num_canvases)]
         self.working_images: List[np.ndarray] = [ImageEditor.new_image(h, w) for _ in range(num_canvases)]
         for k, v in buffer.items():
             image = ImageUtil.hydrate(v)
@@ -116,6 +118,14 @@ class ImageEditor:
         self.init_clipboards()
         self.init_palette()
         self.init_font()
+
+    @property
+    def palette_index(self) -> int:
+        return self.palette_indices[self.canvas_index]
+
+    @palette_index.setter
+    def palette_index(self, value):
+        self.palette_indices[self.canvas_index] = value
 
     @property
     def history(self) -> List[str]:
@@ -152,6 +162,14 @@ class ImageEditor:
     @clipboard.setter
     def clipboard(self, value):
         self.clipboards[self.canvas_index] = value
+
+    @property
+    def working_palette(self) -> int:
+        return self.working_palettes[self.canvas_index]
+
+    @working_palette.setter
+    def working_palette(self, value):
+        self.working_palettes[self.canvas_index] = value
 
     @property
     def working_image(self) -> np.ndarray:
@@ -264,17 +282,16 @@ class ImageEditor:
     def init_palette(self):
         """ Initializes default palette.
         """
-        self.palette = ImageUtil.new_palette(
-              ImageUtil.DEFAULT_PALETTE_0,
-              ImageUtil.DEFAULT_PALETTE_1,
-              ImageUtil.DEFAULT_PALETTE_2,
-              ImageUtil.DEFAULT_PALETTE_3
-        )
+        self.palettes[0] = ImageUtil.new_palette(ImageUtil.PALETTE_A_0, ImageUtil.PALETTE_A_1, ImageUtil.PALETTE_A_2, ImageUtil.PALETTE_A_3)
+        self.palettes[1] = ImageUtil.new_palette(ImageUtil.PALETTE_B_0, ImageUtil.PALETTE_B_1, ImageUtil.PALETTE_B_2, ImageUtil.PALETTE_B_3)
+        self.palettes[2] = ImageUtil.new_palette(ImageUtil.PALETTE_C_0, ImageUtil.PALETTE_C_1, ImageUtil.PALETTE_C_2, ImageUtil.PALETTE_C_3)
+        self.palettes[3] = ImageUtil.new_palette(ImageUtil.PALETTE_D_0, ImageUtil.PALETTE_D_1, ImageUtil.PALETTE_D_2, ImageUtil.PALETTE_D_3)
+        self.palettes[4] = ImageUtil.new_palette(ImageUtil.PALETTE_E_0, ImageUtil.PALETTE_E_1, ImageUtil.PALETTE_E_2, ImageUtil.PALETTE_E_3)
 
     def init_font(self):
         """ Initializes default font.
         """
-        iuci = lambda _: ImageUtil.convert_image(_, self.palette, *ImageEditor.FONT_SIZE)
+        iuci = lambda _: ImageUtil.convert_image(_, self.palettes[0], *ImageEditor.FONT_SIZE)
         self.font = {
             "0": iuci("fc(f0,2)xjfc3fj3c30f03XXf"),
             "1": iuci("fcXf3c(0f,2)0jXxjXX"),
@@ -368,13 +385,13 @@ class ImageEditor:
     def save(self):
         save_file = self.load_file or "persist-temp.txt"
         with open(save_file, "w") as f:
-            f.write("canvas_w>>{}\n".format(self.working_image_w))
-            f.write("canvas_h>>{}\n".format(self.working_image_h))
-            f.write("num_canvases>>{}\n".format(self.num_canvases))
+            f.write(f"canvas_w>>{self.working_image_w}\n")
+            f.write(f"canvas_h>>{self.working_image_h}\n")
+            f.write(f"num_canvases>>{self.num_canvases}\n")
             for n in range(self.num_canvases):
-                f.write("canvas_{}>>{}\n".format(n, self.export_nth_image(n)))
-            f.write("multipreview_x>>{}\n".format(self.multi_preview[0]))
-            f.write("multipreview_y>>{}\n".format(self.multi_preview[1]))
+                f.write(f"canvas_{n}>>{self.export_nth_image(n)}\n")
+            f.write(f"multipreview_x>>{self.multi_preview[0]}\n")
+            f.write(f"multipreview_y>>{self.multi_preview[1]}\n")
 
     def quit(self):
         """ Safely quits pygame.
@@ -443,10 +460,11 @@ class ImageEditor:
         scale_x = ImageEditor.PIXEL_WIDTH if do_scale else 1
         scale_y = ImageEditor.PIXEL_HEIGHT if do_scale else 1
         working_image = self.working_images[index]
+        working_palette = self.working_palettes[index]
         for m in range(working_image.shape[0]):
             for n in range(working_image.shape[1]):
                 palette_enum = self.get_pixel(working_image, m, n)
-                color = self.palette[palette_enum]
+                color = self.palettes[working_palette][palette_enum]
                 pygame.draw.rect(dest, color, (x + m * scale_x, y + n * scale_y, scale_x, scale_y))
         return scale_x * working_image.shape[1], scale_y * working_image.shape[0]
 
@@ -458,18 +476,19 @@ class ImageEditor:
         dx: int = 0
         dy: int = 0
 
-        for n, color in self.palette.items():
-            dx = self.palette_offset_x
-            dy = self.palette_offset_y + n * spacing_y
-            rect = (dx, dy, ImageEditor.PALETTE_WIDTH, ImageEditor.PALETTE_HEIGHT)
-            pygame.draw.rect(dest, (0, 0, 0), rect, 5)
-            pygame.draw.rect(dest, (255, 255, 255), rect, 3)
-            pygame.draw.rect(dest, color, rect)
-
-            # Highlight the current color
-            if n == self.palette_index:
+        for m, palette in self.palettes.items():
+            for n, color in palette.items():
+                dx = self.palette_offset_x + m * spacing_x
+                dy = self.palette_offset_y + n * spacing_y
+                rect = (dx, dy, ImageEditor.PALETTE_WIDTH, ImageEditor.PALETTE_HEIGHT)
                 pygame.draw.rect(dest, (0, 0, 0), rect, 5)
                 pygame.draw.rect(dest, (255, 255, 255), rect, 3)
+                pygame.draw.rect(dest, color, rect)
+
+                # Highlight the current color
+                if m == self.working_palette and n == self.palette_index:
+                    pygame.draw.rect(dest, (0, 0, 0), rect, 5)
+                    pygame.draw.rect(dest, (255, 255, 255), rect, 3)
 
         return dx + spacing_x, dy + spacing_y
 
@@ -641,7 +660,8 @@ class ImageEditor:
             "SHIFT+Z: Undo\n"
             "SHIFT+R: Redo\n"
             "SHIFT+G: Toggle grid\n"
-            "SHIFT+E: Export all to PNG"
+            "SHIFT+E: Export all to PNG\n"
+            "SHIFT+S: Save"
             ,
             dx0, dy1 + ImageEditor.WIDGET_BUFFER
         )
@@ -720,13 +740,14 @@ class ImageEditor:
         namefmt = "{{0:s}}_{{1:0{}}}.png".format(padding)
 
         for nn, numpy_image in enumerate(self.working_images):
+            working_palette = self.working_palettes[nn]
             w = numpy_image.shape[1]
             h = numpy_image.shape[0]
             outs = pygame.Surface((w, h))
             for m in range(h):
                 for n in range(w):
                     palette_enum = self.get_pixel(numpy_image, m, n)
-                    color = self.palette[palette_enum]
+                    color = self.palettes[working_palette][palette_enum]
                     pygame.draw.rect(outs, color, (n, m, 1, 1))
             output = pygame.surfarray.array2d(outs)
             im = Image.fromarray(np.uint8(output)).convert('RGB')
