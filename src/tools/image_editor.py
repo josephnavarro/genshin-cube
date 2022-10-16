@@ -4,6 +4,7 @@ import shutil
 import pygame
 import pyperclip as pc
 import numpy as np
+from PIL import Image
 from typing import List, Tuple, Dict
 from src.utility_image import ImageUtil
 
@@ -744,7 +745,7 @@ class ImageEditor:
 
     def export_all(self):
         savname: str = os.path.splitext(self.load_file)[0] or "persist"
-        dirname: str = "{}_export".format(savname)
+        dirname: str = f"{savname}_export"
         try:
             os.makedirs(dirname)
         except FileExistsError:
@@ -758,13 +759,18 @@ class ImageEditor:
             working_palette = self.working_palettes[nn]
             w = numpy_image.shape[1]
             h = numpy_image.shape[0]
-            outs = pygame.Surface((w, h))
+            outs = pygame.Surface((w, h), pygame.SRCALPHA, 32).convert_alpha()
             for m in range(h):
                 for n in range(w):
                     palette_enum = self.get_pixel(numpy_image, m, n)
                     color = self.palettes[working_palette][palette_enum]
-                    pygame.draw.rect(outs, color, (m, n, 1, 1))
-            pygame.image.save(outs, os.path.join(dirname, namefmt.format(savname, nn)))
+                    if color != [255, 255, 255]:  # TODO: Allow transparent setting
+                        pygame.draw.rect(outs, color, (m, n, 1, 1))  # Pygame ver
+                        # pygame.draw.rect(outs, color, (n, m, 1, 1))
+            # output = pygame.surfarray.array3d(outs)
+            # im = Image.fromarray(np.uint8(output)).convert('RGB')
+            # im.save(os.path.join(dirname, namefmt.format(savname, nn)))
+            pygame.image.save(outs, os.path.join(dirname, namefmt.format(savname, nn)))  # Pygame ver
 
     def update(self):
         """ Accept user input.
