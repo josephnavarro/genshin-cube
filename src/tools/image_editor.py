@@ -61,6 +61,7 @@ class ImageEditor:
 
         # Load persistent data (if any)
         buffer = dict()
+        palette_buffer = dict()
         if load_file:
             try:
                 with open(load_file, "r") as f:
@@ -84,6 +85,9 @@ class ImageEditor:
                                 multi_preview[0] = int(b)
                             elif a[1] == "y":
                                 multi_preview[1] = int(b)
+                        elif a[0] == "palette":
+                            n = int(a[1])
+                            palette_buffer[n] = int(b)
             except FileNotFoundError:
                 pass
 
@@ -107,6 +111,9 @@ class ImageEditor:
 
         # Create canvases
         self.working_palettes: List[int] = [int() for _ in range(num_canvases)]
+        for k, v in palette_buffer.items():
+            self.working_palettes[k] = v
+
         self.working_images: List[np.ndarray] = [ImageEditor.new_image(h, w) for _ in range(num_canvases)]
         for k, v in buffer.items():
             image = ImageUtil.hydrate(v)
@@ -394,6 +401,8 @@ class ImageEditor:
             f.write(f"num_canvases>>{self.num_canvases}\n")
             for n in range(self.num_canvases):
                 f.write(f"canvas_{n}>>{self.export_nth_image(n)}\n")
+            for n in range(self.num_canvases):
+                f.write(f"palette_{n}>>{self.working_palettes[n]}\n")
             f.write(f"multipreview_x>>{self.multi_preview[0]}\n")
             f.write(f"multipreview_y>>{self.multi_preview[1]}\n")
 
@@ -625,13 +634,13 @@ class ImageEditor:
             tx2 += tw2 + ImageEditor.WIDGET_BUFFER
 
         # Selection size
-        self.draw_text(self.display, "x {}".format(self.cursor[1]), dx, ImageEditor.WIDGET_BUFFER + ImageEditor.FONT_SIZE[0] * 0)
-        self.draw_text(self.display, "y {}".format(self.cursor[0]), dx, ImageEditor.WIDGET_BUFFER + ImageEditor.FONT_SIZE[0] * 2)
-        self.draw_text(self.display, "w {}".format(self.cursor[3]), dx, ImageEditor.WIDGET_BUFFER + ImageEditor.FONT_SIZE[0] * 4)
-        self.draw_text(self.display, "h {}".format(self.cursor[2]), dx, ImageEditor.WIDGET_BUFFER + ImageEditor.FONT_SIZE[0] * 6)
+        self.draw_text(self.display, f"x {self.cursor[1]}", dx, ImageEditor.WIDGET_BUFFER + ImageEditor.FONT_SIZE[0] * 0)
+        self.draw_text(self.display, f"y {self.cursor[0]}", dx, ImageEditor.WIDGET_BUFFER + ImageEditor.FONT_SIZE[0] * 2)
+        self.draw_text(self.display, f"w {self.cursor[3]}", dx, ImageEditor.WIDGET_BUFFER + ImageEditor.FONT_SIZE[0] * 4)
+        self.draw_text(self.display, f"h {self.cursor[2]}", dx, ImageEditor.WIDGET_BUFFER + ImageEditor.FONT_SIZE[0] * 6)
         self.draw_text(
               self.display,
-              "{},{}".format(self.working_image_w, self.working_image_h),
+              f"{self.working_image_w},{self.working_image_h}",
               dx, ImageEditor.WIDGET_BUFFER + ImageEditor.FONT_SIZE[0] * 8
         )
 
@@ -657,7 +666,8 @@ class ImageEditor:
             "SHIFT+DOWN: Cursor height +\n"
             "SHIFT+LEFT: Cursor width -\n"
             "SHIFT+RIGHT: Cursor width +\n"
-            "ALT+UP/DOWN: Cycle palette\n"
+            "ALT+UP/DOWN: Cycle color\n"
+            "ALT+LEFT/RIGHT: Cycle palette\n"
             "SHIFT+X: Cut\n"
             "SHIFT+C: Copy\n"
             "SHIFT+V: Paste\n"
