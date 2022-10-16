@@ -4,7 +4,6 @@ import shutil
 import pygame
 import pyperclip as pc
 import numpy as np
-from PIL import Image
 from typing import List, Tuple, Dict
 from src.utility_image import ImageUtil
 
@@ -762,10 +761,8 @@ class ImageEditor:
                 for n in range(w):
                     palette_enum = self.get_pixel(numpy_image, m, n)
                     color = self.palettes[working_palette][palette_enum]
-                    pygame.draw.rect(outs, color, (n, m, 1, 1))
-            output = pygame.surfarray.array2d(outs)
-            im = Image.fromarray(np.uint8(output)).convert('RGB')
-            im.save(os.path.join(dirname, namefmt.format(savname, nn)))
+                    pygame.draw.rect(outs, color, (m, n, 1, 1))
+            pygame.image.save(outs, os.path.join(dirname, namefmt.format(savname, nn)))
 
     def update(self):
         """ Accept user input.
