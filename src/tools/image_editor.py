@@ -309,13 +309,17 @@ class ImageEditor:
         self.palettes[2] = ImageUtil.new_palette(ImageUtil.PALETTE_C_0, ImageUtil.PALETTE_C_1, ImageUtil.PALETTE_C_2, ImageUtil.PALETTE_C_3)
         self.palettes[3] = ImageUtil.new_palette(ImageUtil.PALETTE_D_0, ImageUtil.PALETTE_D_1, ImageUtil.PALETTE_D_2, ImageUtil.PALETTE_D_3)
         self.palettes[4] = ImageUtil.new_palette(ImageUtil.PALETTE_E_0, ImageUtil.PALETTE_E_1, ImageUtil.PALETTE_E_2, ImageUtil.PALETTE_E_3)
+        self.palettes[5] = ImageUtil.new_palette(ImageUtil.PALETTE_F_0, ImageUtil.PALETTE_F_1, ImageUtil.PALETTE_F_2, ImageUtil.PALETTE_F_3)
+        self.palettes[6] = ImageUtil.new_palette(ImageUtil.PALETTE_G_0, ImageUtil.PALETTE_G_1, ImageUtil.PALETTE_G_2, ImageUtil.PALETTE_G_3)
+        self.palettes[7] = ImageUtil.new_palette(ImageUtil.PALETTE_H_0, ImageUtil.PALETTE_H_1, ImageUtil.PALETTE_H_2, ImageUtil.PALETTE_H_3)
+        self.palettes[8] = ImageUtil.new_palette(ImageUtil.PALETTE_I_0, ImageUtil.PALETTE_I_1, ImageUtil.PALETTE_I_2, ImageUtil.PALETTE_I_3)
 
-        if buffer:
-            self.working_transparencies = buffer
-        else:
-            for canvas_index in range(self.num_canvases):
-                self.working_transparencies[canvas_index] = dict()
-                for x in self.palettes:
+        for canvas_index in range(self.num_canvases):
+            self.working_transparencies[canvas_index] = dict()
+            for x in self.palettes:
+                try:
+                    self.working_transparencies[canvas_index][x] = buffer[canvas_index][x]
+                except KeyError:
                     self.working_transparencies[canvas_index][x] = -1
 
     def init_font(self):
@@ -409,8 +413,10 @@ class ImageEditor:
             "_": iuci("(Xxj,3)Xx3f"),
             "`": iuci("XX3c(XX,2)Xx"),
             "/": iuci("Xxf(3Xc,3)Xxf")
-
         }
+
+        for ii in self.font.values():
+            ii.set_colorkey((0, 0, 0))
 
     def save(self):
         save_file = self.load_file or "persist-temp.txt"
@@ -682,27 +688,28 @@ class ImageEditor:
         self.draw_text(
             self.display,
             "UP/DOWN/LEFT/RIGHT: Move cursor\n"
-            "X: Paint\n"
-            "N: Copy (string) to clipboard\n"
-            "M: Paste (string) from clipboard\n"
-            "A: Maximize\n"
-            "S: Minimize\n"
-            "SPACE: Next canvas\n"
-            "SHIFT+SPACE: Previous canvas\n"
-            "SHIFT+UP: Cursor height -\n"
-            "SHIFT+DOWN: Cursor height +\n"
-            "SHIFT+LEFT: Cursor width -\n"
-            "SHIFT+RIGHT: Cursor width +\n"
-            "ALT+UP/DOWN: Cycle color\n"
-            "ALT+LEFT/RIGHT: Cycle palette\n"
-            "SHIFT+X: Cut\n"
-            "SHIFT+C: Copy\n"
-            "SHIFT+V: Paste\n"
-            "SHIFT+Z: Undo\n"
-            "SHIFT+R: Redo\n"
-            "SHIFT+G: Toggle grid\n"
-            "SHIFT+E: Export all to PNG\n"
-            "SHIFT+S: Save"
+            "X:                  Paint\n"
+            "N:                  Copy (string) to clipboard\n"
+            "M:                  Paste (string) from clipboard\n"
+            "A:                  Maximize\n"
+            "S:                  Minimize\n"
+            "T:                  Set current color as transparent\n"
+            "SPACE:              Next canvas\n"
+            "SHIFT+SPACE:        Previous canvas\n"
+            "SHIFT+UP:           Cursor height -\n"
+            "SHIFT+DOWN:         Cursor height +\n"
+            "SHIFT+LEFT:         Cursor width -\n"
+            "SHIFT+RIGHT:        Cursor width +\n"
+            "ALT+UP/DOWN:        Cycle color\n"
+            "ALT+LEFT/RIGHT:     Cycle palette\n"
+            "SHIFT+X:            Cut\n"
+            "SHIFT+C:            Copy\n"
+            "SHIFT+V:            Paste\n"
+            "SHIFT+Z:            Undo\n"
+            "SHIFT+R:            Redo\n"
+            "SHIFT+G:            Toggle grid\n"
+            "SHIFT+E:            Export all to PNG\n"
+            "SHIFT+S:            Save"
             ,
             dx0, dy1 + ImageEditor.WIDGET_BUFFER
         )
@@ -951,8 +958,8 @@ class ImageEditor:
 
 def main():
     #ie = ImageEditor(16, 16, 16, multi_preview=[4, 4])
-    ie = ImageEditor(8, 8, 16, multi_preview=[4, 4])
-    #ie = ImageEditor(16, 16, 49, multi_preview=[7, 7], load_file="persist2.txt")
+    #ie = ImageEditor(8, 8, 16, multi_preview=[4, 4])
+    ie = ImageEditor(16, 16, 49, multi_preview=[7, 7], load_file="persist2.txt")
     #ie = ImageEditor(8, 8, 49, multi_preview=[7, 7], load_file="persist1.txt")
     #ie = ImageEditor(0, 0, 0)
     while True:

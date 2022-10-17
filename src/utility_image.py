@@ -37,6 +37,26 @@ class ImageUtil:
     PALETTE_E_2: List[int] = [120, 80, 24]
     PALETTE_E_3: List[int] = [0, 0, 0]
 
+    PALETTE_F_0: List[int] = [255, 255, 255]
+    PALETTE_F_1: List[int] = [96, 200, 8]
+    PALETTE_F_2: List[int] = [40, 112, 0]
+    PALETTE_F_3: List[int] = [56, 56, 56]
+
+    PALETTE_G_0: List[int] = [255, 255, 255]
+    PALETTE_G_1: List[int] = [192, 144, 56]
+    PALETTE_G_2: List[int] = [160, 120, 24]
+    PALETTE_G_3: List[int] = [56, 56, 56]
+
+    PALETTE_H_0: List[int] = [255, 255, 255]
+    PALETTE_H_1: List[int] = [64, 104, 152]
+    PALETTE_H_2: List[int] = [0, 88, 104]
+    PALETTE_H_3: List[int] = [0, 0, 0]
+
+    PALETTE_I_0: List[int] = [255, 255, 255]
+    PALETTE_I_1: List[int] = [96, 72, 120]
+    PALETTE_I_2: List[int] = [64, 32, 40]
+    PALETTE_I_3: List[int] = [0, 0, 0]
+
     @staticmethod
     def convert_image(inputs: str, palette: Dict[int, List[int]], w: int, h: int) -> pygame.Surface:
         """ Converts a string to a pygame surface.

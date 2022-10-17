@@ -1,7 +1,7 @@
 canvas_w>>8
 canvas_h>>8
 num_canvases>>16
-canvas_0>>(0f,2)3cf3fujXf(cf3,2)(0f,2)3xf
+canvas_0>>(GG,4)
 canvas_1>>(GG,4)
 canvas_2>>(GG,4)
 canvas_3>>(GG,4)
