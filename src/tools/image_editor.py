@@ -381,7 +381,7 @@ class ImageEditor:
             "T": iuci("f3Xx3(0f,3)j3XXXx"),
             "U": iuci("(f0,3)XXj(f0,3)3XXf"),
             "V": iuci("f0f3Xx(cf3,2)f0cjXXxf"),
-            "W": iuci("f0f0f0f30f0f0c030f0f0cf300000003"),
+            "W": iuci("(0f,2)3cf3fujXf(cf3,2)(0f,2)3xf"),
             "X": iuci("f0xfcf3x3c3X03f3cf3XX"),
             "Y": iuci("f0XX3cf0f3f03XXXf"),
             "Z": iuci("f3xfcfj3fc3fj303xfjXX"),
@@ -951,8 +951,9 @@ class ImageEditor:
 
 def main():
     #ie = ImageEditor(16, 16, 16, multi_preview=[4, 4])
-    ie = ImageEditor(16, 16, 49, multi_preview=[7, 7], load_file="persist2.txt")
-    #ie = ImageEditor(8, 8, 49, multi_preview=[7, 7], load_file="persist8x8.txt")
+    ie = ImageEditor(8, 8, 16, multi_preview=[4, 4])
+    #ie = ImageEditor(16, 16, 49, multi_preview=[7, 7], load_file="persist2.txt")
+    #ie = ImageEditor(8, 8, 49, multi_preview=[7, 7], load_file="persist1.txt")
     #ie = ImageEditor(0, 0, 0)
     while True:
         ie.update()
