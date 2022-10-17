@@ -4,7 +4,6 @@ import shutil
 import pygame
 import pyperclip as pc
 import numpy as np
-from PIL import Image
 from typing import List, Tuple, Dict
 from src.utility_image import ImageUtil
 
@@ -32,11 +31,12 @@ class ImageEditor:
         "num_canvases",
         "working_images",
         "working_palettes",
+        "working_transparencies",
+        "palette_indices",
         "canvas_index",
         "cursor",
         "palettes",
         "clipboards",
-        "palette_indices",
         "histories",
         "redos",
         "font",
@@ -62,6 +62,7 @@ class ImageEditor:
         # Load persistent data (if any)
         buffer = dict()
         palette_buffer = dict()
+        transparencies_buffer = dict()
         if load_file:
             try:
                 with open(load_file, "r") as f:
@@ -88,6 +89,12 @@ class ImageEditor:
                         elif a[0] == "palette":
                             n = int(a[1])
                             palette_buffer[n] = int(b)
+                        elif a[0] == "transparencies":
+                            a1 = int(a[1])
+                            a2 = int(a[2])
+                            if a1 not in transparencies_buffer:
+                                transparencies_buffer[a1] = dict()
+                            transparencies_buffer[a1][a2] = int(b)
             except FileNotFoundError:
                 pass
 
@@ -100,6 +107,7 @@ class ImageEditor:
         self.num_canvases: int = num_canvases
         self.canvas_index: int = int()
         self.palette_indices: List[int] = [int() for _ in range(num_canvases)]
+        self.working_transparencies: Dict[int, Dict[int, int]] = dict()
         self.cursor: List[int] = [0, 0, 1, 1]
         self.multi_preview: List[int] = multi_preview
         self.histories: List[List[str]] = [list() for _ in range(num_canvases)]
@@ -123,7 +131,7 @@ class ImageEditor:
         # Finish up initialization
         self.init_canvases(buffer)
         self.init_clipboards()
-        self.init_palette()
+        self.init_palette(transparencies_buffer)
         self.init_font()
 
     @property
@@ -273,10 +281,10 @@ class ImageEditor:
         z = 255 * z / z.max()
         z = gray(z)
         s = pygame.surfarray.make_surface(z)
-        s = pygame.transform.smoothscale(s, (ImageEditor.SCREEN_WIDTH, ImageEditor.SCREEN_HEIGHT))
+        s = pygame.transform.smoothscale(s, (ImageEditor.SCREEN_WIDTH, ImageEditor.SCREEN_HEIGHT))  # TODO
 
-        s = pygame.Surface((ImageEditor.SCREEN_WIDTH, ImageEditor.SCREEN_HEIGHT))
-        s.fill((0, 0, 0))
+        #s = pygame.Surface((ImageEditor.SCREEN_WIDTH, ImageEditor.SCREEN_HEIGHT))
+        #s.fill((0, 0, 0))
 
         return display, s
 
@@ -293,7 +301,7 @@ class ImageEditor:
         """
         self.clipboards = [self.export_nth_image(_) for _ in range(self.num_canvases)]
 
-    def init_palette(self):
+    def init_palette(self, buffer: dict):
         """ Initializes default palette.
         """
         self.palettes[0] = ImageUtil.new_palette(ImageUtil.PALETTE_A_0, ImageUtil.PALETTE_A_1, ImageUtil.PALETTE_A_2, ImageUtil.PALETTE_A_3)
@@ -301,6 +309,14 @@ class ImageEditor:
         self.palettes[2] = ImageUtil.new_palette(ImageUtil.PALETTE_C_0, ImageUtil.PALETTE_C_1, ImageUtil.PALETTE_C_2, ImageUtil.PALETTE_C_3)
         self.palettes[3] = ImageUtil.new_palette(ImageUtil.PALETTE_D_0, ImageUtil.PALETTE_D_1, ImageUtil.PALETTE_D_2, ImageUtil.PALETTE_D_3)
         self.palettes[4] = ImageUtil.new_palette(ImageUtil.PALETTE_E_0, ImageUtil.PALETTE_E_1, ImageUtil.PALETTE_E_2, ImageUtil.PALETTE_E_3)
+
+        if buffer:
+            self.working_transparencies = buffer
+        else:
+            for canvas_index in range(self.num_canvases):
+                self.working_transparencies[canvas_index] = dict()
+                for x in self.palettes:
+                    self.working_transparencies[canvas_index][x] = -1
 
     def init_font(self):
         """ Initializes default font.
@@ -406,6 +422,9 @@ class ImageEditor:
                 f.write(f"canvas_{n}>>{self.export_nth_image(n)}\n")
             for n in range(self.num_canvases):
                 f.write(f"palette_{n}>>{self.working_palettes[n]}\n")
+            for n in self.working_transparencies:
+                for x in self.working_transparencies[n]:
+                    f.write(f"transparencies_{n}_{x}>>{self.working_transparencies[n][x]}\n")
             f.write(f"multipreview_x>>{self.multi_preview[0]}\n")
             f.write(f"multipreview_y>>{self.multi_preview[1]}\n")
 
@@ -480,8 +499,9 @@ class ImageEditor:
         for m in range(working_image.shape[0]):
             for n in range(working_image.shape[1]):
                 palette_enum = self.get_pixel(working_image, m, n)
-                color = self.palettes[working_palette][palette_enum]
-                pygame.draw.rect(dest, color, (x + m * scale_x, y + n * scale_y, scale_x, scale_y))
+                if palette_enum != self.working_transparencies[index][working_palette]:
+                    color = self.palettes[working_palette][palette_enum]
+                    pygame.draw.rect(dest, color, (x + m * scale_x, y + n * scale_y, scale_x, scale_y))
         return scale_x * working_image.shape[1], scale_y * working_image.shape[0]
 
     def draw_palette(self, dest: pygame.Surface) -> Tuple[int, int]:
@@ -500,6 +520,11 @@ class ImageEditor:
                 pygame.draw.rect(dest, (0, 0, 0), rect, 5)
                 pygame.draw.rect(dest, (255, 255, 255), rect, 3)
                 pygame.draw.rect(dest, color, rect)
+
+                if n == self.working_transparencies[self.canvas_index][m]:
+                    inv_color = (255 - color[0], 255 - color[1], 255 - color[2])
+                    pygame.draw.line(dest, inv_color, (dx, dy), (dx + ImageEditor.PALETTE_WIDTH, dy + ImageEditor.PALETTE_HEIGHT), 2)
+                    pygame.draw.line(dest, inv_color, (dx + ImageEditor.PALETTE_WIDTH, dy), (dx, dy + ImageEditor.PALETTE_HEIGHT), 2)
 
                 # Highlight the current color
                 if m == self.working_palette and n == self.palette_index:
@@ -606,7 +631,7 @@ class ImageEditor:
                         tx = dx + x * self.working_image_w
                         ty = dy + y * self.working_image_h
                         self.draw_nth_canvas(n, self.display, tx, ty, False)
-                    except IndexError as e:
+                    except IndexError:
                         pass
 
         # Palette bar
@@ -616,7 +641,7 @@ class ImageEditor:
         dx2, dy2 = self.preview_offset
         tx2 = dx2
         ty2 = max(dyc, dy) + ImageEditor.WIDGET_BUFFER
-        tw2 = 0
+        # tw2 = 0
         th2 = 0
         for n in range(self.num_canvases):
             canvas = self.working_images[n]
@@ -741,7 +766,7 @@ class ImageEditor:
         """
         im: str = self.snapshot()
         self.history.append(im)
-        self.redo = []
+        self.redo = list()
 
     def export_all(self):
         savname: str = os.path.splitext(self.load_file)[0] or "persist"
@@ -763,13 +788,9 @@ class ImageEditor:
             for m in range(h):
                 for n in range(w):
                     palette_enum = self.get_pixel(numpy_image, m, n)
-                    color = self.palettes[working_palette][palette_enum]
-                    if color != [255, 255, 255]:  # TODO: Allow transparent setting
+                    if palette_enum != self.working_transparencies[nn][working_palette]:
+                        color = self.palettes[working_palette][palette_enum]
                         pygame.draw.rect(outs, color, (m, n, 1, 1))  # Pygame ver
-                        # pygame.draw.rect(outs, color, (n, m, 1, 1))
-            # output = pygame.surfarray.array3d(outs)
-            # im = Image.fromarray(np.uint8(output)).convert('RGB')
-            # im.save(os.path.join(dirname, namefmt.format(savname, nn)))
             pygame.image.save(outs, os.path.join(dirname, namefmt.format(savname, nn)))  # Pygame ver
 
     def update(self):
@@ -919,6 +940,13 @@ class ImageEditor:
                     if e.mod & pygame.KMOD_LSHIFT:
                         # Toggle pixel grid display
                         self.pixel_grid = not self.pixel_grid
+                elif e.key == pygame.K_t:
+                    palette = self.working_palettes[self.canvas_index]
+                    xx = self.working_transparencies[self.canvas_index][palette]
+                    if xx != self.palette_index:
+                        self.working_transparencies[self.canvas_index][palette] = self.palette_index
+                    else:
+                        self.working_transparencies[self.canvas_index][palette] = -1
 
 
 def main():
