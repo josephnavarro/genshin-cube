@@ -1,7 +1,7 @@
 canvas_w>>16
 canvas_h>>16
 num_canvases>>49
-canvas_0>>03facb030fGgwaxwbaxdc7g3esf7m75df7ec7wsp75d6den7cwsp576dednc7e3s7fm57fdepcwfaefbefadf7cg30afbc30fGg0
+canvas_0>>03facb030fGg2eaxwbaxdc7g3esf7m75df7ec7wsp75d6den7cwsp576dednc7e3s7fm57fdepcwfaefbefadf7cg30afbc30fGg0
 canvas_1>>g3efa0c(0f,2)Gjatxsfdfug03eab9vme7f60cjsrvf57bnpjsrv5fb76fu30ae9bvm7fmujbafbax(af,2)cGe3afc(0f,2)G0
 canvas_2>>g3efa0c(0f,2)Gjatxsfafcfg03eab9vmf7mujsrvf57bf6ujsrv5fb7np30ae9bvm7e6fc0jbafbaxafduGe3afc(0f,2)G0
 canvas_3>>(GG,2)g03fbfa0xafacf03esaefaxaf5bcjsbeaf5df75fujfatMp59cf30aefp5d5bcfetg30defcfg0e3cG03GGg0
@@ -168,9 +168,9 @@ transparencies_7_2>>0
 transparencies_7_3>>0
 transparencies_7_4>>0
 transparencies_7_5>>0
-transparencies_7_6>>-1
-transparencies_7_7>>-1
-transparencies_7_8>>-1
+transparencies_7_6>>0
+transparencies_7_7>>0
+transparencies_7_8>>0
 transparencies_8_0>>0
 transparencies_8_1>>0
 transparencies_8_2>>0

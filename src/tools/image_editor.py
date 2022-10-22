@@ -12,7 +12,7 @@ class ImageEditor:
     CAPTION: str = "Image Editor"
     FLAGS: int = pygame.DOUBLEBUF | pygame.HWSURFACE
     SCREEN_WIDTH: int = 720
-    SCREEN_HEIGHT: int = 720
+    SCREEN_HEIGHT: int = 480
     DEFAULT_WIDTH: int = 32
     DEFAULT_HEIGHT: int = 32
     PIXEL_WIDTH: int = 9
