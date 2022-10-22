@@ -15,8 +15,8 @@ class ImageEditor:
     SCREEN_HEIGHT: int = 480
     DEFAULT_WIDTH: int = 32
     DEFAULT_HEIGHT: int = 32
-    PIXEL_WIDTH: int = 9
-    PIXEL_HEIGHT: int = 9
+    PIXEL_WIDTH: int = 8
+    PIXEL_HEIGHT: int = 8
     WIDGET_BUFFER: int = 8
     PALETTE_WIDTH: int = 32
     PALETTE_HEIGHT: int = 16
@@ -614,10 +614,28 @@ class ImageEditor:
             self.draw_dotted_line(self.display, p1, p2)
         self.display.unlock()
 
+    def draw_bg_grid(self):
+        """ Draws pixel grid guidelines.
+        """
+        w = ImageEditor.SCREEN_WIDTH // ImageEditor.PIXEL_WIDTH
+        h = ImageEditor.SCREEN_HEIGHT // ImageEditor.PIXEL_HEIGHT
+
+        self.display.lock()
+        for x in range(w + 1):
+            p1 = (x * ImageEditor.PIXEL_WIDTH, 0)
+            p2 = (x * ImageEditor.PIXEL_WIDTH, h * ImageEditor.PIXEL_HEIGHT)
+            self.draw_dotted_line(self.display, p1, p2)
+        for y in range(h + 1):
+            p1 = (0, y * ImageEditor.PIXEL_HEIGHT)
+            p2 = (w * ImageEditor.PIXEL_WIDTH, y * ImageEditor.PIXEL_HEIGHT)
+            self.draw_dotted_line(self.display, p1, p2)
+        self.display.unlock()
+
     def render(self):
         """ Toplevel rendering method.
         """
         self.display.blit(self.background, (0, 0))
+        self.draw_bg_grid()
 
         # Editing canvas
         dx, dy = self.canvas_offset
